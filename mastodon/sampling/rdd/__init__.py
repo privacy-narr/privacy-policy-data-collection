@@ -15,9 +15,13 @@ def check_domain(domain):
                 dat = r.json()
                 with open('mastodon_servers', 'a') as f:
                     json.dump(dat, f)
+                    f.write('\n')
             except requests.exceptions.JSONDecodeError:
                 with open('log', 'a') as f:
                     f.write(f'Detected JSON error for {domain}\n')
+            except requests.exceptions.ReadTimeout:
+                with open('err', 'w') as f:
+                    f.write(f'Read timed out for {domain}\n')
             except Exception as e:
                 with open('log', 'a') as f:
                     f.write(f'Unhandled exception for {domain}:' + str(e))
