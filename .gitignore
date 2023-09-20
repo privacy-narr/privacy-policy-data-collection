@@ -1,0 +1,11 @@
+.data-repo
+.exclusionsserver_output
+.venv
+__pycache__
+.exclusions
+log
+mastodon_servers
+mastodon/sampling/rdd/__pycache__
+*__pycache__*
+*.pyc
+.gitignoremastodon/sampling/rdd/__pycache__/__init__.cpython-311.pyc
