@@ -1,3 +1,13 @@
 # Privacy Policy Data Collection
 
 This public repository contains the encoded procedures the POEM lab used to identify eligible Mastodon instances and their privacy policies for our research. _There is no data stored or distributed via this repository._ This repository contains **only** scripts that would allow other researchers to generate new samples to _replicate_ our study. If you are interested in our collected _data_, please reach out directly to `project@email.com`.
+
+## Usage
+
+You can use the code in this repository to collect fresh data. The code is organized according to the structure `<platform>/<object>/<method>`. So for example, if you wanted to reproduce the random domain approach to identify mastodon servers, you would call: 
+
+```
+python -m mastodon.instances.rdd -h
+```
+
+Running the above will print out the task-specific usage information.

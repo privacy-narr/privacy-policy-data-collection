@@ -9,3 +9,4 @@ mastodon/sampling/rdd/__pycache__
 *__pycache__*
 *.pyc
 .gitignoremastodon/sampling/rdd/__pycache__/__init__.cpython-311.pyc
+project-configs.json
