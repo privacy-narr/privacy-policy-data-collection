@@ -10,7 +10,7 @@ other_errors = []
 
 OUTDIR = CONFIG.get_outdir(__name__)
 today = datetime.today()
-OUTFILE_RAW = "{1}{0}{2:02d}{3:02d}{4}{0}serverlist.jsonl".format(os.sep, OUTDIR, today.day, today.month, today.year)
+OUTFILE_RAW = "{1}{0}{4}_{3:02d}_{2:02d}{0}serverlist.jsonl".format(os.sep, OUTDIR, today.day, today.month, today.year)
 existing_domains = set()
 
 if os.path.exists(OUTFILE_RAW):

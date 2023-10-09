@@ -15,7 +15,7 @@ if Config._registries not in CONFIG[Config._mastodon]:
 today = datetime.today()
 
 def make_dump_path(name, fname):
-    dir = "{1}{0}{2:02d}{3:02d}{4}{0}".format(os.sep, CONFIG.get_outdir(name), today.day, today.month, today.year)
+    dir = "{1}{0}{4}_{3:02d}_{2:02d}{0}".format(os.sep, CONFIG.get_outdir(name), today.day, today.month, today.year)
     if not os.path.exists(dir):
         os.makedirs(dir)
     return dir + fname
