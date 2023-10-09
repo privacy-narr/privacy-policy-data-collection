@@ -1,5 +1,6 @@
 import requests, json, os
 from collections import defaultdict
+from datetime import datetime
 from ... import CONFIG
 
 codes = defaultdict(list)
@@ -8,7 +9,8 @@ data = dict()
 other_errors = []
 
 OUTDIR = CONFIG.get_outdir(__name__)
-OUTFILE_RAW = OUTDIR + os.sep + "raw" + os.sep + "serverlist.jsonl"
+today = datetime.today()
+OUTFILE_RAW = "{1}{0}{2:02d}{3:02d}{4}{0}serverlist.jsonl".format(os.sep, OUTDIR, today.day, today.month, today.year)
 existing_domains = set()
 
 if os.path.exists(OUTFILE_RAW):
