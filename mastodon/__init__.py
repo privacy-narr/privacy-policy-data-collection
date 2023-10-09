@@ -1,6 +1,8 @@
 import json
 import pathlib
 import readline
+
+
 from typing import * 
 
 readline.set_completer_delims(' \t\n=')
@@ -15,12 +17,10 @@ CONFIG_PATH = pathlib.Path(__file__).parent.parent.joinpath("./project-configs.j
 class Config(dict):
     _mastodon = "mastodon"
     _datarepo = "data_repository"
-    __raw_output = "raw_output"
-    __clean_output = "clean_output"
 
-    __rdd = "rdd"
-    __registries = "registries"
-    __referral = "referral"
+    _rdd = "rdd"
+    _registries = "registries"
+    _referral = "referral"
 
     bad_data_repo_msg = 'Data repository not set. Please provide path to data repository\n> '
 
@@ -65,7 +65,7 @@ class Config(dict):
         if Config._datarepo not in MASTODON or len(MASTODON[Config._datarepo]) == 0:
             Config.input_path_loop(Config.bad_data_repo_msg, MASTODON, Config._datarepo)
 
-        self.__exit__()
+        self.__exit__(None, None, None)
 
 
     def get_outdir(self, module_name): 
@@ -86,12 +86,12 @@ class Config(dict):
         
     def __enter__(self):
         self.settable = True
+        return self
     
-    def __exit__(self):
+    def __exit__(self, exec_type, exec_val, exec_tb):
         with open(self.config_path, 'w') as f:
             obj = {k: v for k, v in self.items()}
-            print(obj)
-            json.dump(obj, f)
+            json.dump(obj, f, indent=2)
         self.settable = False
 
 

@@ -5,44 +5,69 @@
     Fetches server data using the API described in https://instances.social/api/doc/#api-_ 
     Configured by the .env file that should be in the same directory as this project.
 """
-
 import json
 import os
 import pathlib
+import readline
 import requests
 import time 
 
-from argparse import ArgumentParser
 from collections import defaultdict
-from ... import get_outdir, MASTODON, __registries
+from . import make_dump_path
+from . import Config, CONFIG, parser as arg_parser
 
-__FETCH_SERVER_FIELDS_TO_KEEP = "FETCH_SERVER_FIELDS_TO_KEEP"
+
+readline.set_completer_delims(' \t\n=')
+if 'libedit' in readline.__doc__:
+    readline.parse_and_bind("bind ^I rl_complete")
+else:
+    readline.parse_and_bind("tab: complete")
+
+key_FETCH_SERVER_FIELDS_TO_KEEP = "FETCH_SERVER_FIELDS_TO_KEEP"
 __default_FETCH_SERVER_FIELDS_TO_KEEP = "id,name,up,users,open_registrations,info.topic,info.categories,info.languages,active_users,email,admin".split(",")
-__FETCH_SERVER_API_ENDPOINT = "FETCH_SERVER_API_ENDPOINT"
+key_FETCH_SERVER_API_ENDPOINT = "FETCH_SERVER_API_ENDPOINT"
 __default_FETCH_SERVER_API_ENDPOINT = "instances/list"
-__FETCH_SERVER_API_AUTH_TOKEN = "FETCH_SERVER_API_AUTH_TOKEN"
+key_FETCH_SERVER_API_AUTH_TOKEN = "FETCH_SERVER_API_AUTH_TOKEN"
 
+key_instances = "instances.social"
+api_prompt = "> Please provide the api authorization token: "
+
+if key_instances not in CONFIG[Config._mastodon][Config._registries]:
+  # Augment to ask the end user to provide additional information later. For now use all of the defaults
+  api_key = input(api_prompt)
+  with CONFIG:
+    CONFIG[Config._mastodon][Config._registries][key_instances] = {
+      key_FETCH_SERVER_FIELDS_TO_KEEP : __default_FETCH_SERVER_FIELDS_TO_KEEP,
+      key_FETCH_SERVER_API_ENDPOINT : __default_FETCH_SERVER_API_ENDPOINT,
+      key_FETCH_SERVER_API_AUTH_TOKEN : api_key
+    }
+elif key_FETCH_SERVER_API_AUTH_TOKEN not in CONFIG[Config._mastodon][Config._registries][key_instances]:
+  api_key = input(api_prompt)
+  with CONFIG:
+    __instances_obj = CONFIG[Config._mastodon][Config._registries][key_instances]
+    __instances_obj[key_FETCH_SERVER_API_AUTH_TOKEN] =  api_key
+    if key_FETCH_SERVER_API_ENDPOINT not in __instances_obj:
+      __instances_obj[key_FETCH_SERVER_API_ENDPOINT] = __default_FETCH_SERVER_API_ENDPOINT
+    if key_FETCH_SERVER_FIELDS_TO_KEEP not in __instances_obj:
+      __instances_obj[key_FETCH_SERVER_FIELDS_TO_KEEP] = __default_FETCH_SERVER_FIELDS_TO_KEEP
 
 file_dir = pathlib.Path(__file__).parent.resolve()
-dump_path = get_outdir(__name__) + os.sep + 'mastodon-server-dump.jsonl'
+dump_path = make_dump_path(__name__, "mastodon-server-dump.jsonl")
 
-if __registries__ not in MASTODON:
-  MASTODON[__registries__] = {}
+INSTANCES = CONFIG[Config._mastodon][Config._registries][key_instances]
 
-if 
-  fields_to_keep = os.environ['FETCH_SERVER_FIELDS_TO_KEEP'].split(',')
-print('Parsing out the fields to keep:', os.environ['FETCH_SERVER_FIELDS_TO_KEEP'])
+fields_to_keep = INSTANCES[key_FETCH_SERVER_FIELDS_TO_KEEP]
+print('Parsing out the fields to keep:', INSTANCES[key_FETCH_SERVER_FIELDS_TO_KEEP])
 
 
 if os.path.exists(dump_path):
   os.remove(dump_path)
 
-arg_parser = ArgumentParser()
 arg_parser.add_argument('--pagesize', type=int, help='Amount of items to retrieve per API call. Default: 100', default=100)
 args = arg_parser.parse_args()
 
 api_host = 'https://instances.social/api/1.0'
-api_server_endpoint = os.environ['FETCH_SERVER_API_ENDPOINT']
+api_server_endpoint = INSTANCES[key_FETCH_SERVER_API_ENDPOINT]
 
 next_id = None
 result_count = 0
@@ -55,7 +80,7 @@ while True:
       'min_id': next_id 
     },
     headers={
-      'Authorization': f"Bearer {os.environ['FETCH_SERVER_API_AUTH_TOKEN']}"
+      'Authorization': f"Bearer {INSTANCES[key_FETCH_SERVER_API_AUTH_TOKEN]}"
     }
     ).json()
     
