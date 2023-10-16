@@ -1,9 +1,11 @@
+from collections.abc import Iterator
 import json
 import pathlib
 import readline
 
-
 from typing import * 
+
+__all__ = ['clean', 'fetch']
 
 readline.set_completer_delims(' \t\n=')
 if 'libedit' in readline.__doc__:
@@ -41,6 +43,7 @@ class Config(dict):
         self.settable = None
         self.config_path = CONFIG_PATH
         self._load()
+        super().__init__()
 
 
     def _load(self):
@@ -79,9 +82,15 @@ class Config(dict):
         else: 
             raise ValueError('Setting config values must occur inside a context manager')
         
+    def items(self) -> Iterator:
+        return super().items()
+    
+    def __sizeof__(self) -> int:
+        return super().__sizeof__()
+        
     def __str__(self):
         # replace this with some serde-like thing
-        items = ",".join(['{k}:{v}'.format(k, str(v)) for k, v in self.iteritems()])
+        items = "\n".join(['{}:\t{}'.format(k, str(self[k])) for k in self.keys()])
         return f'{items}'
         
     def __enter__(self):

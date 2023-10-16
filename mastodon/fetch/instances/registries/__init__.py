@@ -3,7 +3,9 @@ import os
 from argparse import ArgumentParser
 from datetime import datetime
 
-from ... import CONFIG, Config
+from .... import CONFIG, Config
+
+__all__ = ['instances.social', 'joinmastodon.org']
 
 # Create a shared parser.
 parser = ArgumentParser()
