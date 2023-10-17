@@ -1,5 +1,4 @@
 import requests, json, os
-from bs4 import BeautifulSoup
 from datetime import datetime
 from .... import CONFIG
 
