@@ -2,6 +2,7 @@ from collections.abc import Iterator
 import json
 import pathlib
 import readline
+import requests
 
 from typing import * 
 
@@ -70,11 +71,29 @@ class Config(dict):
 
         self.__exit__(None, None, None)
 
-
     def get_outdir(self, module_name): 
         m = self[Config._mastodon]
         path = pathlib.Path(m[Config._datarepo]).joinpath("data", *module_name.split('.'))
         return str(path.resolve())
+    
+    def get_data_files(self, module_name, version='latest') -> Iterator[pathlib.PosixPath]:
+        if module_name.endswith('policies'):
+            root = self.get_outdir(module_name)
+            
+            for instance_name in pathlib.Path(root).iterdir():
+                versions = instance_name.iterdir()
+
+                if version == 'latest':
+                    yield max(versions)
+                
+                elif version == 'all':
+                    for date in versions:
+                        yield date
+
+                else:
+                    raise ValueError(f'Unsupported version option: {version}')
+        else:
+            raise ValueError(f'Unsupported data module: {module_name}')
     
     def __setitem__(self, __key: Any, __value: Any) -> None:
         if self.settable:
@@ -105,3 +124,57 @@ class Config(dict):
 
 
 CONFIG = Config()
+
+class Instance():
+
+    headers = ['registry', 'url', 'open', 'users', 'active_users', 'email']
+
+    def __init__(self, registry, obj):
+        self.registry = registry
+        self.url      = {
+            'joinmastodon_org' : lambda : obj['domain'],
+            'instances_social' : lambda : obj['name'] 
+        }[registry]()
+        self.open     = {
+            'instances_social' : lambda : obj['open_registrations'],
+            'joinmastodon_org' : lambda : 'approval_required' in obj and obj['approval_required']
+        }[registry]()
+        self.users = {
+            'instances_social' : lambda : obj['users'],
+            'joinmastodon_org' : lambda : obj['total_users']
+        }[registry]()
+        self.active_users = {
+            'instances_social' : lambda : obj['active_users'],
+            'joinmastodon_org' : lambda : obj['last_week_users']
+        }[registry]()
+        self.email = self._getemail(registry, obj)
+
+    
+    def _getemail(self, registry, obj):
+        if registry == 'instances_social': 
+            return obj['email']
+        else:
+            try:
+                r = requests.get(f'https://{self.url}/api/v2/instance')
+                r = r.json()
+            except:
+                try:
+                    r = requests.get(f'https://{self.url}/api/v1/instance')
+                    r = r.json()
+                except:
+                    print('instances data request failed for', self.url)
+                    return ""
+            if 'contact' in r:
+                if 'email' in r['contact']:
+                    return r['contact']['email']
+            return ""
+        
+    def __str__(self):
+        return f'{self.registry}\t{self.url}\t{self.open}\t{self.users}\t{self.active_users}\t{self.email}\n'
+    
+    def __eq__(self, other):
+        return self.url == other.url
+    
+    def __hash__(self):
+        return self.url.__hash__()
+    

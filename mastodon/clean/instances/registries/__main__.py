@@ -2,24 +2,24 @@
 # De-duplicates and filters raw data. 
 # Only selects servers where English is an official language
 
-import json, os
-from . import Instance
-from ... import Config, CONFIG
+import json, os, pathlib
+from .. import Instance
+from .... import Config, CONFIG
 
 english_servers     = set()
 no_language_servers = set()
 nonenglish_servers  = set()
 
-root = '{1}{0}data{0}mastodon{0}instances{0}registries'.format(os.sep, CONFIG[Config._mastodon][Config._datarepo])
+DATA_REPO = pathlib.Path(CONFIG[Config._mastodon][Config._datarepo])
+root = DATA_REPO.joinpath('data', *__package__.replace('clean', 'fetch').split('.'))
 
 
-for registry in os.listdir(root):
-    reg = registry
-    registry = root + os.sep + registry
-    for folder in os.listdir(registry):
-        folder = registry + os.sep + folder
-        for filename in os.listdir(folder):
-            with open(folder + os.sep + filename, 'r') as f:
+
+for registry in root.iterdir():
+    reg = registry.parts[-1]
+    for folder in registry.iterdir():
+        for filename in folder.iterdir():
+            with open(filename, 'r') as f:
                 for line in f:
                     datalist = json.loads(line)
                     for instance in datalist:
@@ -40,8 +40,10 @@ for registry in os.listdir(root):
                             no_language_servers.add(Instance(reg, instance))
                         
 
+parent_dir = DATA_REPO.joinpath('data', *__package__.split('.'))
+parent_dir.mkdir(parents=True, exist_ok=True)
                             
-with open(f'.{os.sep}cleaned_data{os.sep}registries_serverlist.csv', 'w') as f:
+with open(parent_dir.joinpath('serverlist.csv'), 'w') as f:
     f.write('\t'.join(Instance.headers) + '\n')
     for instance in english_servers:
         f.write(str(instance))
