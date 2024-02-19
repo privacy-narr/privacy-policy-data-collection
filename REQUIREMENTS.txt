@@ -1,1 +1,1 @@
-pandoc==2.4b0
+pandoc==2.4b0requests
