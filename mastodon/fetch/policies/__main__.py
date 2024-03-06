@@ -26,30 +26,39 @@ class ConfigReplace(argparse.Action):
             if key.lower() in CONFIG[Config._mastodon]:
                 replacement = CONFIG[Config._mastodon][key.lower()]
                 new_value = values.replace(f'%{key}%', replacement)
+                print(f'setting {self.dest}')
                 setattr(namespace, self.dest, new_value)
             else:
                 raise ValueError(f'Key {key} not in configuration object; possible keys:\n', '\n\t'.join(CONFIG.__dict__.keys()))
-        if 'format' not in namespace:
-            ext = values.split('.')[-1]
-            setattr(namespace, 'format', ext)
+        # if 'format' not in namespace:
+        #     ext = values.split('.')[-1]
+        #     setattr(namespace, 'format', ext)
+
+
+def infer_format(namespace, values):
+    if values is None and 'filename' in namespace and namespace.__getattribute__('filename'):
+        ext = namespace.__getattribute__('filename').split('.')[-1]
+        setattr(namespace, 'format', ext)
 
 
 class FormatInfer(argparse.Action):
     def __call__(self, parser: ArgumentParser, namespace: Namespace, values: str | Sequence[Any] | None, option_string: str | None = None) -> None:
-        print('calilng format infer')
-        if values is None and 'filename' in namespace and namespace['filename']:
-            ext = namespace['filename'].split('.')[-1]
-            setattr(namespace, self.dest, ext)
+        print('calling format infer')
+        infer_format(namespace, values)
+
 
 parser = argparse.ArgumentParser(__package__, description='Fetches policies given the request. See usage for how to request.')
-parser.add_argument('--filename', default=None, required=False, action=ConfigReplace)
+parser.add_argument('--filename', default=None, required=False) # action=ConfigReplace)
 parser.add_argument('--method', default=None)
-parser.add_argument('--format', required=False, default=None, choices=FORMATS, action=FormatInfer)
+parser.add_argument('--format', required=False, choices=FORMATS) #, action=FormatInfer)
 parser.add_argument('--latest', default=True)
 parser.add_argument('--threads', default=4)
 
 args = parser.parse_args()
+infer_format(args, args.format)
 
+print(args.filename, args.format)
+assert args.filename is not None and args.format is not None
 
 # resolve format
 if not args.format:
@@ -62,8 +71,9 @@ if not args.format:
 
 if not args.filename:
     if args.method:
-        method_data_dir = CONFIG.get_outdir('instances.rdd')
-        print(method_data_dir)
+        # method_data_dir = CONFIG.get_outdir('instances.rdd')
+        # print(method_data_dir)
+        pass
 
 
 if len(sys.argv) < 2:
